@@ -19,9 +19,8 @@ exports.logout = (req, res) => {
 };
 
 exports.isLoggedIn = (req, res, next) => {
-  // first check if the user is authenticated
   if (req.isAuthenticated()) {
-    next(); // carry on! They are logged in!
+    next();
     return;
   }
   req.flash('error', 'Oops you must be logged in to do that!');
@@ -29,17 +28,14 @@ exports.isLoggedIn = (req, res, next) => {
 };
 
 exports.forgot = async (req, res) => {
-  // Check if a user with that email exists
   const user = await User.findOne({ email: req.body.email });
   if (!user) {
     req.flash('error', 'No account with that email exists.');
     return res.redirect('/login');
   }
-  // Set reset tokens and expiry on their account
   user.resetPasswordToken = crypto.randomBytes(20).toString('hex');
   user.resetPasswordExpires = Date.now() + 3600000;
   await user.save();
-  // Send them an email with the token
   const resetURL = `http://${req.headers.host}/account/reset/${user.resetPasswordToken}`;
   await mail.send({
     user,
@@ -61,13 +57,12 @@ exports.reset = async (req, res) => {
     req.flash('error', 'Password reset is invalid or has expired');
     return res.redirect('/login');
   }
-  // if user exists, show reset form
   res.render('reset', { title: 'Reset your Password' });
 };
 
 exports.confirmedPasswords = (req, res, next) => {
   if (req.body.password === req.body['password-confirm']) {
-    next(); // keepit going!
+    next();
     return;
   }
   req.flash('error', 'Passwords do not match!');
